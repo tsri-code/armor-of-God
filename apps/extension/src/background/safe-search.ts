@@ -35,19 +35,13 @@ const SAFE_SEARCH_RULES = {
 // Apply safe search enforcement
 export async function enforceSafeSearch(): Promise<void> {
   try {
-    if (!supportsDeclarativeNetRequest()) {
-      logger.info(
-        "safe-search",
-        "Using webRequest for safe search enforcement"
-      );
-      await setupWebRequestSafeSearch();
-      return;
-    }
+    // Always use webRequest for better compatibility and reliability
+    logger.info(
+      "safe-search",
+      "Using webRequest for safe search enforcement (better compatibility)"
+    );
 
-    logger.info("safe-search", "Setting up DNR safe search rules");
-
-    const rules = generateSafeSearchRules();
-    await updateSafeSearchRules(true, rules);
+    await setupWebRequestSafeSearch();
 
     // Setup YouTube restricted mode (requires special handling)
     await setupYouTubeRestrictions();
@@ -102,59 +96,16 @@ export async function updateSafeSearchRules(
   }
 }
 
-// Generate DNR rules for safe search
+// Generate DNR rules for safe search - Using webRequest fallback only
 function generateSafeSearchRules(): chrome.declarativeNetRequest.Rule[] {
+  // Disable regex-based rules that cause compatibility issues
+  // Safe search will be handled via webRequest API for better compatibility
   const rules: chrome.declarativeNetRequest.Rule[] = [];
-  let ruleId = CONSTANTS.RULES.SAFE_SEARCH_RULE_ID_START;
 
-  // Google safe search (simplified pattern - no negative lookbehind)
-  rules.push({
-    id: ruleId++,
-    priority: 10,
-    action: {
-      type: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
-      redirect: {
-        regexSubstitution: "https://www.google.\\1/search?\\2&safe=active",
-      },
-    },
-    condition: {
-      regexFilter:
-        "^https://www\\.google\\.([a-z.]+)/search\\?(?!.*safe=active)(.*)$",
-      resourceTypes: [chrome.declarativeNetRequest.ResourceType.MAIN_FRAME],
-    },
-  });
-
-  // Bing safe search (simplified pattern - no negative lookbehind)
-  rules.push({
-    id: ruleId++,
-    priority: 10,
-    action: {
-      type: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
-      redirect: {
-        regexSubstitution: "https://www.bing.com/search?\\1&adlt=strict",
-      },
-    },
-    condition: {
-      regexFilter: "^https://www\\.bing\\.com/search\\?(?!.*adlt=strict)(.*)$",
-      resourceTypes: [chrome.declarativeNetRequest.ResourceType.MAIN_FRAME],
-    },
-  });
-
-  // DuckDuckGo safe search (simplified pattern - no negative lookbehind)
-  rules.push({
-    id: ruleId++,
-    priority: 10,
-    action: {
-      type: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
-      redirect: {
-        regexSubstitution: "https://duckduckgo.com/?\\1&safe-search=strict",
-      },
-    },
-    condition: {
-      regexFilter: "^https://duckduckgo\\.com/\\?(?!.*safe-search=strict)(.*)$",
-      resourceTypes: [chrome.declarativeNetRequest.ResourceType.MAIN_FRAME],
-    },
-  });
+  logger.info(
+    "safe-search",
+    "Using webRequest-only approach for better browser compatibility"
+  );
 
   return rules;
 }

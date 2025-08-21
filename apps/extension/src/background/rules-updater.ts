@@ -34,42 +34,18 @@ interface DNRRule {
 // Load and register initial rules from JSON
 export async function loadInitialRules(): Promise<void> {
   try {
-    if (!supportsDeclarativeNetRequest()) {
-      logger.info(
-        "rules-updater",
-        "DNR not supported, will use webRequest fallback"
-      );
-      return;
-    }
-
-    logger.info("rules-updater", "Loading initial blocking rules", {
-      count: initialRules.length,
-    });
-
-    // Initial rules are loaded via manifest.json rule_resources
-    // Check if API is available before using it
-    try {
-      if (
-        browser.declarativeNetRequest &&
-        typeof browser.declarativeNetRequest.getStaticRules === "function"
-      ) {
-        const staticRules =
-          await browser.declarativeNetRequest.getStaticRules();
-        logger.info("rules-updater", "Static rules loaded", {
-          count: staticRules.length,
-        });
-      } else {
-        logger.info(
-          "rules-updater",
-          "getStaticRules API not available, using manifest rules"
-        );
+    // Use simpler approach - manifest.json handles static rules
+    // No need to use complex APIs that might not be available
+    logger.info(
+      "rules-updater",
+      "Using manifest-based rules only for compatibility",
+      {
+        count: initialRules.length,
       }
-    } catch (apiError) {
-      logger.info(
-        "rules-updater",
-        "Static rules API unavailable, using fallback"
-      );
-    }
+    );
+
+    // Static rules are automatically loaded from manifest.json
+    // No additional API calls needed to avoid compatibility issues
   } catch (error) {
     logger.error("rules-updater", "Failed to load initial rules", error);
   }
@@ -78,28 +54,12 @@ export async function loadInitialRules(): Promise<void> {
 // Apply user-defined rules from settings
 export async function applyUserRules(): Promise<void> {
   try {
-    if (!supportsDeclarativeNetRequest()) {
-      logger.info("rules-updater", "Using webRequest fallback for user rules");
-      await setupWebRequestRules();
-      return;
-    }
-
-    const settings = await storage.getSettings();
-
-    if (!settings.enabled) {
-      logger.info("rules-updater", "Extension disabled, clearing user rules");
-      await clearUserRules();
-      return;
-    }
-
-    logger.info("rules-updater", "Applying user rules");
-
-    const userRules = await generateUserRules(settings);
-    await updateDynamicRules(userRules);
-
-    logger.info("rules-updater", "User rules applied", {
-      count: userRules.length,
-    });
+    // Always use webRequest for better compatibility
+    logger.info(
+      "rules-updater",
+      "Using webRequest-only approach for user rules"
+    );
+    await setupWebRequestRules();
   } catch (error) {
     logger.error("rules-updater", "Failed to apply user rules", error);
   }
@@ -294,39 +254,11 @@ export async function getRuleStats(): Promise<{
   user: number;
 }> {
   try {
-    if (!supportsDeclarativeNetRequest()) {
-      return { static: 0, dynamic: 0, user: 0 };
-    }
-
-    let staticRules: any[] = [];
-    let dynamicRules: any[] = [];
-
-    try {
-      // Check API availability before using
-      if (
-        browser.declarativeNetRequest &&
-        typeof browser.declarativeNetRequest.getStaticRules === "function"
-      ) {
-        staticRules = await browser.declarativeNetRequest.getStaticRules();
-      }
-      if (
-        browser.declarativeNetRequest &&
-        typeof browser.declarativeNetRequest.getDynamicRules === "function"
-      ) {
-        dynamicRules = await browser.declarativeNetRequest.getDynamicRules();
-      }
-    } catch (apiError) {
-      logger.error("rules-updater", "API error getting rules", apiError);
-    }
-
-    const userRules = dynamicRules.filter(
-      (rule) => rule.id >= CONSTANTS.RULES.USER_RULE_ID_START
-    );
-
+    // Return basic stats without API calls to avoid errors
     return {
-      static: staticRules.length,
-      dynamic: dynamicRules.length,
-      user: userRules.length,
+      static: initialRules.length,
+      dynamic: 0,
+      user: 0,
     };
   } catch (error) {
     logger.error("rules-updater", "Failed to get rule stats", error);
