@@ -19,6 +19,36 @@ const scannedImages = new WeakSet<HTMLImageElement>();
 const MAX_CONCURRENT_SCANS = 3;
 const SCAN_DEBOUNCE_MS = 100;
 
+// Enhanced filtering for inappropriate searches
+const GOOGLE_IMAGES_PATTERN =
+  /images\.google\.|google\..+\/imghp|google\..+\/search.*tbm=isch/i;
+const NSFW_SEARCH_TERMS = [
+  "sexy",
+  "hot",
+  "nude",
+  "naked",
+  "porn",
+  "adult",
+  "erotic",
+  "lingerie",
+  "bikini",
+  "revealing",
+  "provocative",
+  "sensual",
+];
+
+// Check if current context requires aggressive filtering
+function requiresAggressiveFiltering(): boolean {
+  const isGoogleImages = GOOGLE_IMAGES_PATTERN.test(window.location.href);
+
+  if (!isGoogleImages) return false;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const query = (urlParams.get("q") || "").toLowerCase();
+
+  return NSFW_SEARCH_TERMS.some((term) => query.includes(term));
+}
+
 // Initialize the content script
 async function initialize(): Promise<void> {
   try {
@@ -341,6 +371,17 @@ function determineAction(score: number): ScanResult["action"] {
 
   const { thresholds } = settings;
 
+  // Apply aggressive filtering for inappropriate searches
+  if (requiresAggressiveFiltering()) {
+    // Lower all thresholds significantly for inappropriate search contexts
+    if (score >= thresholds.blur * 0.3) {
+      // Much more aggressive
+      return "blur";
+    } else if (score >= thresholds.warning * 0.2) {
+      return "warn";
+    }
+  }
+
   if (score >= thresholds.block) {
     return "block";
   } else if (score >= thresholds.blur) {
@@ -387,10 +428,18 @@ function blockImage(img: HTMLImageElement, result: ScanResult): void {
 // Blur an image
 function blurImage(img: HTMLImageElement, result: ScanResult): void {
   img.classList.add("armor-of-god-blurred");
-  img.style.filter = "blur(20px)";
+
+  // Apply more aggressive blur for inappropriate search contexts
+  const blurAmount = requiresAggressiveFiltering() ? "40px" : "20px";
+  img.style.filter = `blur(${blurAmount})`;
   img.style.transition = "filter 0.3s ease";
   img.setAttribute("data-armor-blurred", "true");
   img.setAttribute("aria-label", "Image blurred by content filter");
+
+  // Add visual overlay for aggressive filtering
+  if (requiresAggressiveFiltering()) {
+    addProtectionOverlay(img);
+  }
 
   // Add click handler to temporarily unblur (with warning)
   img.style.cursor = "pointer";
@@ -401,6 +450,52 @@ function blurImage(img: HTMLImageElement, result: ScanResult): void {
   );
 
   console.log("[Armor of God] Image blurred:", img.src.substring(0, 100));
+}
+
+// Add protection overlay to heavily filtered images
+function addProtectionOverlay(img: HTMLImageElement): void {
+  // Skip if overlay already exists
+  if (img.parentElement?.querySelector(".armor-protection-overlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "armor-protection-overlay";
+  overlay.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(147, 51, 234, 0.95));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    z-index: 1000;
+    pointer-events: none;
+    border-radius: 4px;
+  `;
+
+  overlay.innerHTML = `
+    <div style="font-size: 20px; margin-bottom: 4px;">🛡️</div>
+    <div>PROTECTED</div>
+    <div style="font-size: 10px; font-weight: normal; margin-top: 2px;">Click to review</div>
+  `;
+
+  // Make image container relative if needed
+  const container = img.parentElement;
+  if (container && getComputedStyle(container).position === "static") {
+    container.style.position = "relative";
+  }
+
+  // Insert overlay
+  if (container) {
+    container.appendChild(overlay);
+  }
 }
 
 // Add warning to image

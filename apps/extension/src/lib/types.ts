@@ -15,7 +15,13 @@ export interface ExtensionMessage {
 }
 
 export interface ContentScriptMessage extends ExtensionMessage {
-  type: "CONTENT_BLOCKED" | "SCAN_RESULT" | "PIN_REQUIRED" | "SETTINGS_REQUEST";
+  type:
+    | "CONTENT_BLOCKED"
+    | "SCAN_RESULT"
+    | "TEXT_FILTERED"
+    | "SEARCH_BLOCKED"
+    | "PIN_REQUIRED"
+    | "SETTINGS_REQUEST";
 }
 
 export interface BackgroundMessage extends ExtensionMessage {
@@ -88,6 +94,21 @@ export interface ScanOptions {
   maxConcurrentScans: number;
 }
 
+// Text filtering types
+export interface TextScanResult {
+  score: number;
+  matchedWords: string[];
+  severity: "explicit" | "suggestive" | "moderate";
+  action: "block" | "blur" | "warn" | "allow";
+}
+
+export interface TextScanContext {
+  element: HTMLElement;
+  textContent: string;
+  url: string;
+  timestamp: number;
+}
+
 // Rule matching types
 export interface RuleMatch {
   rule: any; // Rule type from shared
@@ -126,7 +147,7 @@ export class ExtensionError extends Error {
   constructor(
     message: string,
     public code: string,
-    public context?: any,
+    public context?: any
   ) {
     super(message);
     this.name = "ExtensionError";
