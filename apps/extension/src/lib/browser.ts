@@ -2,7 +2,39 @@
  * Cross-browser polyfill for WebExtension APIs
  * Works with both Chrome and Firefox
  */
-import browser from "webextension-polyfill";
+
+// More defensive browser loading to prevent "Cannot access 'Bp' before initialization" errors
+let browser: any;
+
+try {
+  // Try to import the polyfill
+  browser = require("webextension-polyfill");
+  if (browser.default) {
+    browser = browser.default;
+  }
+} catch (error) {
+  // Fallback to globals if polyfill fails
+  browser = (globalThis as any).browser || (globalThis as any).chrome;
+}
+
+// If still no browser, create minimal fallback
+if (!browser) {
+  browser = {
+    runtime: {
+      sendMessage: () => Promise.reject(new Error("Browser API not available")),
+      openOptionsPage: () => {},
+    },
+    storage: {
+      local: {
+        get: () => Promise.resolve({}),
+        set: () => Promise.resolve(),
+      },
+      onChanged: {
+        addListener: () => {},
+      },
+    },
+  };
+}
 
 // Re-export the browser object with proper typing
 export { browser };

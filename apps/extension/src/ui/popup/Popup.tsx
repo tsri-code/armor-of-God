@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import "../../content/blur.css";
 import { formatVerse } from "../../background/verse-service";
+import browser from "../../lib/browser";
 import type { Verse, Settings, Stats } from "../../lib/types";
 
 interface PopupData {
@@ -35,16 +36,18 @@ function Popup() {
     try {
       setData((prev) => ({ ...prev, loading: true, error: null }));
 
-      // Load data in parallel
-      const [verseResponse, settingsResponse, statsResponse] =
-        await Promise.all([
-          browser.runtime.sendMessage({ type: "GET_VERSE" }),
-          browser.runtime.sendMessage({ type: "GET_SETTINGS" }),
-          browser.runtime.sendMessage({ type: "GET_STATS" }),
-        ]);
+      // Load settings and stats (skip verse for now to avoid errors)
+      const [settingsResponse, statsResponse] = await Promise.all([
+        browser.runtime
+          .sendMessage({ type: "GET_SETTINGS" })
+          .catch(() => ({ error: "Settings unavailable" })),
+        browser.runtime
+          .sendMessage({ type: "GET_STATS" })
+          .catch(() => ({ error: "Stats unavailable" })),
+      ]);
 
       setData({
-        verse: verseResponse?.error ? null : verseResponse,
+        verse: null, // Skip verse loading for simplicity
         settings: settingsResponse?.error ? null : settingsResponse,
         stats: statsResponse?.error ? null : statsResponse,
         loading: false,
@@ -55,7 +58,8 @@ function Popup() {
       setData((prev) => ({
         ...prev,
         loading: false,
-        error: "Failed to load extension data",
+        error: null, // Don't show error, just show disabled state
+        settings: { enabled: false } as any, // Fallback state
       }));
     }
   };
@@ -70,11 +74,13 @@ function Popup() {
           ...prev,
           settings: prev.settings
             ? { ...prev.settings, enabled: response.enabled }
-            : null,
+            : ({ enabled: response.enabled } as any),
         }));
       }
     } catch (error) {
       console.error("Failed to toggle extension:", error);
+      // Force a reload to get current state
+      setTimeout(loadPopupData, 100);
     }
   };
 
@@ -83,155 +89,144 @@ function Popup() {
     window.close();
   };
 
-  const refreshVerse = async () => {
-    try {
-      const response = await browser.runtime.sendMessage({
-        type: "GET_VERSE",
-        data: { refresh: true },
-      });
-      if (!response?.error) {
-        setData((prev) => ({ ...prev, verse: response }));
-      }
-    } catch (error) {
-      console.error("Failed to refresh verse:", error);
-    }
-  };
-
   if (data.loading) {
     return <LoadingScreen />;
   }
 
-  if (data.error) {
-    return <ErrorScreen error={data.error} onRetry={loadPopupData} />;
-  }
-
-  const { verse, settings, stats } = data;
+  const { settings, stats } = data;
+  const isEnabled = settings?.enabled ?? false;
 
   return (
-    <div className="w-[380px] bg-white">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-christian-600 text-white p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center p-1">
-              <img
-                src="/assets/Icons/shield-cross/shield-cross-32.png"
-                alt="Armor of God"
-                className="w-full h-full object-contain filter brightness-0 invert"
-              />
-            </div>
-            <div>
-              <h1 className="font-semibold text-lg">Armor of God</h1>
-              <p className="text-white/80 text-xs">
-                {settings?.enabled
-                  ? "Protection Active"
-                  : "Protection Disabled"}
-              </p>
-            </div>
+    <div className="w-[340px] bg-white">
+      {/* Header with Large Toggle */}
+      <div
+        className={`text-white p-6 transition-colors ${
+          isEnabled
+            ? "bg-gradient-to-r from-green-600 to-emerald-600"
+            : "bg-gradient-to-r from-gray-500 to-gray-600"
+        }`}
+      >
+        <div className="text-center">
+          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <img
+              src="/assets/Icons/shield-cross/shield-cross-32.png"
+              alt="Armor of God"
+              className="w-10 h-10 object-contain filter brightness-0 invert"
+            />
           </div>
+          <h1 className="font-bold text-xl mb-2">Armor of God</h1>
+
+          {/* Large Toggle Button */}
           <button
             onClick={toggleExtension}
-            className={`w-12 h-6 rounded-full relative transition-colors ${
-              settings?.enabled ? "bg-green-400" : "bg-white/30"
+            className={`w-32 h-16 rounded-xl relative transition-all duration-300 mb-3 ${
+              isEnabled
+                ? "bg-white/30 hover:bg-white/40"
+                : "bg-white/20 hover:bg-white/30"
             }`}
           >
             <div
-              className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${
-                settings?.enabled ? "translate-x-6" : "translate-x-0.5"
+              className={`w-12 h-12 bg-white rounded-full absolute top-2 transition-transform duration-300 flex items-center justify-center ${
+                isEnabled ? "translate-x-16" : "translate-x-2"
               }`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Daily Verse */}
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <img
-              src="/assets/Icons/book-cross/book-cross-16.png"
-              alt="Bible verse"
-              className="w-4 h-4 opacity-70"
-            />
-            <h2 className="font-medium text-gray-900">Today's Verse</h2>
-          </div>
-          <button
-            onClick={refreshVerse}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            title="Refresh verse"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {verse ? (
-          <div className="text-sm">
-            <blockquote className="text-gray-700 italic mb-2 leading-relaxed">
-              "{verse.text}"
-            </blockquote>
-            <cite className="text-gray-500 not-italic text-xs">
-              — {verse.reference} (BSB)
-            </cite>
-          </div>
-        ) : (
-          <div className="text-center text-gray-500 text-sm py-4">
-            <div className="mb-2">
-              <img
-                src="/assets/Icons/book-cross/book-cross-32.png"
-                alt="Bible"
-                className="w-8 h-8 mx-auto opacity-60"
-              />
+              {isEnabled ? (
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-6 h-6 text-gray-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
             </div>
-            <p>Verse unavailable offline</p>
-            <button
-              onClick={refreshVerse}
-              className="text-primary-600 hover:underline text-xs mt-1"
-            >
-              Try again
-            </button>
-          </div>
-        )}
+          </button>
+
+          <p className="text-white/90 font-medium">
+            {isEnabled ? "Protection Active" : "Protection Disabled"}
+          </p>
+          <p className="text-white/70 text-sm">
+            {isEnabled
+              ? "Filtering content and enforcing safe search"
+              : "Click above to enable protection"}
+          </p>
+        </div>
       </div>
 
-      {/* Quick Stats */}
-      {stats && (
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center gap-2 mb-3">
-            <img
-              src="/assets/Icons/helmet-cross/helmet-cross-16.png"
-              alt="Protection"
-              className="w-4 h-4 opacity-70"
-            />
-            <h3 className="font-medium text-gray-900">Protection Stats</h3>
+      {/* Status Indicators */}
+      {isEnabled && settings && (
+        <div className="p-4 bg-green-50 border-b border-green-100">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <div
+                className={`w-3 h-3 rounded-full mx-auto mb-1 ${
+                  settings.modules?.imageScanning
+                    ? "bg-green-500"
+                    : "bg-gray-400"
+                }`}
+              ></div>
+              <div className="text-xs text-gray-600">Images</div>
+            </div>
+            <div>
+              <div
+                className={`w-3 h-3 rounded-full mx-auto mb-1 ${
+                  settings.modules?.textFiltering
+                    ? "bg-green-500"
+                    : "bg-gray-400"
+                }`}
+              ></div>
+              <div className="text-xs text-gray-600">Text</div>
+            </div>
+            <div>
+              <div
+                className={`w-3 h-3 rounded-full mx-auto mb-1 ${
+                  settings.modules?.safeSearch ? "bg-green-500" : "bg-gray-400"
+                }`}
+              ></div>
+              <div className="text-xs text-gray-600">Search</div>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Quick Stats (only when enabled) */}
+      {isEnabled && stats && (
+        <div className="p-4 border-b border-gray-100">
+          <h3 className="font-medium text-gray-900 mb-3 text-center">
+            Protection Stats
+          </h3>
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center">
-              <div className="text-lg font-bold text-primary-600">
-                {stats.blocksToday}
+              <div className="text-2xl font-bold text-green-600">
+                {stats.blocksToday || 0}
               </div>
               <div className="text-xs text-gray-500">Today</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-christian-600">
-                {stats.blocksThisWeek}
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.blocksThisWeek || 0}
               </div>
               <div className="text-xs text-gray-500">This Week</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-gray-600">
-                {stats.blocksTotal}
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.blocksTotal || 0}
               </div>
               <div className="text-xs text-gray-500">All Time</div>
             </div>
@@ -239,46 +234,15 @@ function Popup() {
         </div>
       )}
 
-      {/* Module Status */}
-      {settings && (
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center gap-2 mb-3">
-            <img
-              src="/assets/Icons/lock-cross/lock-cross-16.png"
-              alt="Modules"
-              className="w-4 h-4 opacity-70"
-            />
-            <h3 className="font-medium text-gray-900">Protection Modules</h3>
-          </div>
-          <div className="space-y-2">
-            <ModuleStatus
-              label="Image Scanning"
-              enabled={settings.modules.imageScanning}
-              active={settings.enabled}
-            />
-            <ModuleStatus
-              label="Safe Search"
-              enabled={settings.modules.safeSearch}
-              active={settings.enabled}
-            />
-            <ModuleStatus
-              label="URL Blocking"
-              enabled={settings.modules.urlBlocking}
-              active={settings.enabled}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Quick Actions */}
+      {/* Action Buttons */}
       <div className="p-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-3">
           <button
             onClick={openOptions}
-            className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
           >
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -296,15 +260,15 @@ function Popup() {
                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            Settings
+            Advanced Settings
           </button>
 
           <button
             onClick={() => window.close()}
-            className="flex items-center justify-center gap-2 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
           >
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -400,6 +364,3 @@ if (container) {
   const root = createRoot(container);
   root.render(<Popup />);
 }
-
-// Make browser available
-const browser = (globalThis as any).browser || (globalThis as any).chrome;

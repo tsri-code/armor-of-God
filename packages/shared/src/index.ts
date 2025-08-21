@@ -9,7 +9,7 @@ export interface Rule {
 }
 
 export interface RuleAction {
-  type: 'block' | 'redirect' | 'allow';
+  type: "block" | "redirect" | "allow";
   redirect?: {
     url?: string;
     extensionPath?: string;
@@ -20,28 +20,28 @@ export interface RuleAction {
 export interface RuleCondition {
   urlFilter?: string;
   regexFilter?: string;
-  domainType?: 'firstParty' | 'thirdParty';
+  domainType?: "firstParty" | "thirdParty";
   resourceTypes?: ResourceType[];
   excludedResourceTypes?: ResourceType[];
   domains?: string[];
   excludedDomains?: string[];
 }
 
-export type ResourceType = 
-  | 'main_frame'
-  | 'sub_frame' 
-  | 'stylesheet'
-  | 'script'
-  | 'image'
-  | 'font'
-  | 'object'
-  | 'xmlhttprequest'
-  | 'ping'
-  | 'csp_report'
-  | 'media'
-  | 'websocket'
-  | 'webtransport'
-  | 'webbundle';
+export type ResourceType =
+  | "main_frame"
+  | "sub_frame"
+  | "stylesheet"
+  | "script"
+  | "image"
+  | "font"
+  | "object"
+  | "xmlhttprequest"
+  | "ping"
+  | "csp_report"
+  | "media"
+  | "websocket"
+  | "webtransport"
+  | "webbundle";
 
 // Settings and configuration
 export interface Settings {
@@ -76,7 +76,7 @@ export interface Schedule {
   startTime: string; // HH:MM format
   endTime: string; // HH:MM format
   strictMode: boolean;
-  modules: Partial<Settings['modules']>;
+  modules: Partial<Settings["modules"]>;
 }
 
 // Verse and scripture types
@@ -93,20 +93,24 @@ export interface VersePlan {
 
 // Events for communication between components
 export interface ExtensionEvents {
-  'settings-changed': Settings;
-  'rule-triggered': { rule: Rule; url: string; timestamp: number };
-  'content-blocked': { type: 'image' | 'video' | 'text'; url: string; score: number };
-  'pin-required': { context: string };
-  'verse-updated': Verse;
+  "settings-changed": Settings;
+  "rule-triggered": { rule: Rule; url: string; timestamp: number };
+  "content-blocked": {
+    type: "image" | "video" | "text";
+    url: string;
+    score: number;
+  };
+  "pin-required": { context: string };
+  "verse-updated": Verse;
 }
 
 // Storage keys
 export enum StorageKeys {
-  SETTINGS = 'settings',
-  VERSE_CACHE = 'verse_cache',
-  RULES_CACHE = 'rules_cache',
-  STATS = 'stats',
-  LOGS = 'logs',
+  SETTINGS = "settings",
+  VERSE_CACHE = "verse_cache",
+  RULES_CACHE = "rules_cache",
+  STATS = "stats",
+  LOGS = "logs",
 }
 
 // Content scanning results
@@ -115,45 +119,49 @@ export interface ScanResult {
   categories: {
     [category: string]: number;
   };
-  action: 'allow' | 'blur' | 'warn' | 'block';
+  action: "allow" | "blur" | "warn" | "block";
   timestamp: number;
 }
 
 // ML Model categories (nsfwjs)
 export enum ContentCategory {
-  DRAWING = 'Drawing',
-  HENTAI = 'Hentai', 
-  NEUTRAL = 'Neutral',
-  PORN = 'Porn',
-  SEXY = 'Sexy',
+  DRAWING = "Drawing",
+  HENTAI = "Hentai",
+  NEUTRAL = "Neutral",
+  PORN = "Porn",
+  SEXY = "Sexy",
 }
 
 // Safe search providers
 export enum SearchProvider {
-  GOOGLE = 'google',
-  BING = 'bing',
-  DUCKDUCKGO = 'duckduckgo',
-  YOUTUBE = 'youtube',
+  GOOGLE = "google",
+  BING = "bing",
+  DUCKDUCKGO = "duckduckgo",
+  YOUTUBE = "youtube",
 }
 
 // Constants
 export const CONSTANTS = {
   API: {
-    BSB_VERSION_ID: 'bba9f40183526463-01',
+    BSB_VERSION_ID: "bba9f40183526463-01",
     WORKER_ENDPOINTS: {
-      VERSE_OF_DAY: '/votd',
-      PASSAGE: '/passage',
+      VERSE_OF_DAY: "/votd",
+      PASSAGE: "/passage",
     },
   },
   ML: {
-    MODEL_URL: '/public/models/',
+    MODEL_URL: "/public/models/",
     MODEL_SIZE: 224,
     SCANNING_THRESHOLD: 0.75,
-    EXPLICIT_CATEGORIES: [ContentCategory.PORN, ContentCategory.HENTAI, ContentCategory.SEXY],
+    EXPLICIT_CATEGORIES: [
+      ContentCategory.PORN,
+      ContentCategory.HENTAI,
+      ContentCategory.SEXY,
+    ],
   },
   STORAGE: {
     CACHE_TTL: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-    VERSE_CACHE_KEY: 'daily_verse',
+    VERSE_CACHE_KEY: "daily_verse",
   },
   RULES: {
     DYNAMIC_RULE_ID_START: 10000,
@@ -168,7 +176,7 @@ export const CONSTANTS = {
   UI: {
     POPUP_WIDTH: 380,
     POPUP_HEIGHT: 500,
-    BLOCKED_PAGE_URL: '/ui/blocked/blocked.html',
+    BLOCKED_PAGE_URL: "/ui/blocked/blocked.html",
   },
 } as const;
 
@@ -190,7 +198,7 @@ export const DEFAULT_SETTINGS: Settings = {
   modules: {
     imageScanning: true,
     videoScanning: false, // v1.0 feature
-    textFiltering: false, // v1.0 feature
+    textFiltering: true, // ENABLED by default for content filtering
     safeSearch: true,
     urlBlocking: true,
   },
@@ -211,12 +219,14 @@ export function isValidUrl(url: string): boolean {
 }
 
 export function isValidDomain(domain: string): boolean {
-  const domainRegex = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i;
+  const domainRegex =
+    /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i;
   return domainRegex.test(domain);
 }
 
 export function isExplicitContent(scanResult: ScanResult): boolean {
   return CONSTANTS.ML.EXPLICIT_CATEGORIES.some(
-    category => scanResult.categories[category] >= CONSTANTS.ML.SCANNING_THRESHOLD
+    (category) =>
+      scanResult.categories[category] >= CONSTANTS.ML.SCANNING_THRESHOLD
   );
 }
