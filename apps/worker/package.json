@@ -1,0 +1,27 @@
+{
+  "name": "@armor-of-god/worker",
+  "version": "0.1.0",
+  "description": "Cloudflare Worker for BSB API proxy - secures API keys and provides caching",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy",
+    "build": "tsup",
+    "type-check": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@armor-of-god/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240129.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.1",
+    "wrangler": "^3.26.0"
+  },
+  "files": [
+    "src",
+    "wrangler.toml"
+  ]
+}

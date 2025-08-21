@@ -1,0 +1,33 @@
+name = "armor-of-god-worker"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+BSB_VERSION_ID = "bba9f40183526463-01"
+API_BASE_URL = "https://api.scripture.api.bible/v1"
+CORS_ORIGINS = "chrome-extension://*,moz-extension://*,https://localhost:*"
+
+# Secrets (set via: wrangler secret put SCRIPTURE_API_KEY)
+# SCRIPTURE_API_KEY = "your-api-key-here"
+
+# KV namespace for caching (will be created during deployment)
+# Uncomment after creating KV namespace:
+# [[kv_namespaces]]
+# binding = "VERSE_CACHE"
+# id = "your-kv-namespace-id"
+# preview_id = "your-kv-preview-id"
+
+# Rate limiting using Durable Objects (optional)
+# [[durable_objects.bindings]]
+# name = "RATE_LIMITER"
+# class_name = "RateLimiter"
+
+# Environment-specific overrides
+[env.production]
+name = "armor-of-god-worker-prod"
+vars = { ENVIRONMENT = "production" }
+
+[env.staging]
+name = "armor-of-god-worker-staging"
+vars = { ENVIRONMENT = "staging" }

@@ -1,0 +1,25 @@
+{
+  "name": "armor-of-god",
+  "private": true,
+  "description": "Christian Safety Browser Extension - Block adult content and show daily BSB verses",
+  "scripts": {
+    "build": "pnpm --filter '*' build",
+    "dev": "pnpm --filter extension dev",
+    "test": "pnpm --filter '*' test",
+    "lint": "pnpm --filter '*' lint",
+    "format": "prettier --write .",
+    "type-check": "pnpm --filter '*' type-check"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "@types/firefox-webext-browser": "^120.0.4",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

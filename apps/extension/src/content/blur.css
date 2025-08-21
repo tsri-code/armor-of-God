@@ -1,0 +1,329 @@
+/**
+ * CSS for content filtering effects
+ * Applied to images and other content flagged by the extension
+ */
+
+/* Base styles for filtered content */
+.armor-of-god-blurred {
+  filter: blur(20px) !important;
+  transition: filter 0.3s ease !important;
+  cursor: pointer !important;
+  position: relative !important;
+}
+
+.armor-of-god-blurred::after {
+  content: "🛡️ Content Filtered";
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  z-index: 1000 !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.armor-of-god-blurred:hover::after {
+  opacity: 1 !important;
+}
+
+/* Temporarily unblurred images */
+.armor-of-god-unblurred {
+  filter: none !important;
+  cursor: default !important;
+}
+
+.armor-of-god-unblurred::after {
+  display: none !important;
+}
+
+/* Blocked images */
+.armor-of-god-blocked {
+  display: none !important;
+}
+
+/* Warned images */
+.armor-of-god-warned {
+  border: 2px solid #f59e0b !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3) !important;
+  position: relative !important;
+}
+
+.armor-of-god-warned::before {
+  content: "⚠️";
+  position: absolute !important;
+  top: 4px !important;
+  right: 4px !important;
+  background: rgba(245, 158, 11, 0.9) !important;
+  color: white !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  z-index: 1000 !important;
+  pointer-events: none !important;
+}
+
+/* Hover effects for better UX */
+.armor-of-god-blurred:hover {
+  transform: scale(1.02) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+.armor-of-god-warned:hover::before {
+  background: rgba(245, 158, 11, 1) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Animation for newly applied filters */
+@keyframes armor-filter-applied {
+  0% {
+    filter: none !important;
+    opacity: 1 !important;
+  }
+  50% {
+    opacity: 0.5 !important;
+  }
+  100% {
+    filter: blur(20px) !important;
+    opacity: 1 !important;
+  }
+}
+
+.armor-of-god-blurred.armor-filter-new {
+  animation: armor-filter-applied 0.5s ease-out !important;
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .armor-of-god-blurred {
+    transition: none !important;
+  }
+  
+  .armor-of-god-blurred::after {
+    transition: none !important;
+  }
+  
+  .armor-of-god-blurred:hover {
+    transform: none !important;
+  }
+  
+  .armor-filter-new {
+    animation: none !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .armor-of-god-blurred::after {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: black !important;
+  }
+  
+  .armor-of-god-warned::before {
+    background: rgba(245, 158, 11, 0.8) !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .armor-of-god-blurred::after {
+    background: black !important;
+    color: white !important;
+    border: 1px solid white !important;
+  }
+  
+  .armor-of-god-warned {
+    border-color: #d97706 !important;
+    border-width: 3px !important;
+  }
+  
+  .armor-of-god-warned::before {
+    background: #d97706 !important;
+    border: 1px solid white !important;
+  }
+}
+
+/* Focus indicators for keyboard navigation */
+.armor-of-god-blurred:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}
+
+.armor-of-god-warned:focus {
+  outline: 2px solid #f59e0b !important;
+  outline-offset: 2px !important;
+}
+
+/* Print styles - remove filters when printing */
+@media print {
+  .armor-of-god-blurred {
+    filter: none !important;
+  }
+  
+  .armor-of-god-blurred::after {
+    display: none !important;
+  }
+  
+  .armor-of-god-warned {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  .armor-of-god-warned::before {
+    display: none !important;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .armor-of-god-blurred::after {
+    font-size: 10px !important;
+    padding: 6px 8px !important;
+  }
+  
+  .armor-of-god-warned::before {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 10px !important;
+    top: 2px !important;
+    right: 2px !important;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+  .armor-of-god-blurred::after {
+    font-size: 14px !important;
+    padding: 10px 16px !important;
+  }
+}
+
+/* Overlay for temporarily unblurred content */
+.armor-of-god-temp-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  z-index: 10000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: white !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 18px !important;
+  text-align: center !important;
+  padding: 20px !important;
+}
+
+.armor-of-god-temp-overlay .countdown {
+  font-size: 24px !important;
+  font-weight: bold !important;
+  margin-top: 10px !important;
+}
+
+/* Video player overlays (for future video scanning) */
+.armor-of-god-video-overlay {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+  color: white !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  text-align: center !important;
+  z-index: 1000 !important;
+}
+
+.armor-of-god-video-overlay .icon {
+  font-size: 48px !important;
+  margin-bottom: 16px !important;
+}
+
+.armor-of-god-video-overlay .message {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  margin-bottom: 8px !important;
+}
+
+.armor-of-god-video-overlay .details {
+  font-size: 14px !important;
+  opacity: 0.8 !important;
+}
+
+/* Text filtering styles (for future text scanning) */
+.armor-of-god-text-filtered {
+  background: linear-gradient(45deg, transparent 40%, rgba(0, 0, 0, 0.8) 50%, transparent 60%) !important;
+  color: transparent !important;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8) !important;
+}
+
+.armor-of-god-text-filtered:hover {
+  background: none !important;
+  color: inherit !important;
+  text-shadow: none !important;
+}
+
+/* Loading spinner for ML processing */
+.armor-of-god-processing {
+  position: relative !important;
+  opacity: 0.6 !important;
+}
+
+.armor-of-god-processing::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: -10px 0 0 -10px !important;
+  border: 2px solid #ccc !important;
+  border-top-color: #3b82f6 !important;
+  border-radius: 50% !important;
+  animation: armor-spin 1s linear infinite !important;
+  z-index: 1000 !important;
+}
+
+@keyframes armor-spin {
+  to {
+    transform: rotate(360deg) !important;
+  }
+}
+
+/* Accessibility improvements */
+.armor-of-god-blurred[aria-label]::after {
+  content: attr(aria-label) !important;
+}
+
+/* Force styles to override site-specific CSS */
+img.armor-of-god-blurred,
+video.armor-of-god-blurred,
+picture.armor-of-god-blurred {
+  filter: blur(20px) !important;
+}
+
+img.armor-of-god-blocked,
+video.armor-of-god-blocked,
+picture.armor-of-god-blocked {
+  display: none !important;
+}

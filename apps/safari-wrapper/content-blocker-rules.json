@@ -1,0 +1,120 @@
+[
+  {
+    "trigger": {
+      "url-filter": ".*",
+      "resource-type": ["document"],
+      "if-domain": ["pornhub.com", "*.pornhub.com"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": ".*",
+      "resource-type": ["document"],
+      "if-domain": ["xvideos.com", "*.xvideos.com"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": ".*",
+      "resource-type": ["document"],
+      "if-domain": ["xhamster.com", "*.xhamster.com"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": ".*",
+      "resource-type": ["document"],
+      "if-domain": ["redtube.com", "*.redtube.com"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": ".*",
+      "resource-type": ["document"],
+      "if-domain": ["youporn.com", "*.youporn.com"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": ".*",
+      "resource-type": ["document"],
+      "if-domain": ["tube8.com", "*.tube8.com"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": ".*",
+      "resource-type": ["document"],
+      "if-domain": ["spankbang.com", "*.spankbang.com"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": ".*",
+      "resource-type": ["document"],
+      "if-domain": ["chaturbate.com", "*.chaturbate.com"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": ".*\\.(xxx|porn|sex|adult)($|/.*)",
+      "resource-type": ["document"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": ".*/ads?[/_-](porn|adult|sexy|nsfw).*",
+      "resource-type": ["image", "script", "sub-frame"]
+    },
+    "action": {
+      "type": "block"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": "https://www\\.google\\..*?/search\\?.*",
+      "resource-type": ["document"]
+    },
+    "action": {
+      "type": "css-display-none",
+      "selector": "div[data-ved]:has(a[href*='adult']), div[data-ved]:has(a[href*='porn']), div[data-ved]:has(a[href*='sex'])"
+    }
+  },
+  {
+    "trigger": {
+      "url-filter": "https://www\\.bing\\.com/search\\?.*",
+      "resource-type": ["document"]
+    },
+    "action": {
+      "type": "css-display-none",
+      "selector": "li.b_algo:has(a[href*='adult']), li.b_algo:has(a[href*='porn']), li.b_algo:has(a[href*='sex'])"
+    }
+  }
+]

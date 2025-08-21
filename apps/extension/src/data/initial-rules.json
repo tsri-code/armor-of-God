@@ -1,0 +1,136 @@
+[
+  {
+    "id": 1000,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/src/ui/blocked/blocked.html"
+      }
+    },
+    "condition": {
+      "urlFilter": "||pornhub.com^",
+      "resourceTypes": ["main_frame"]
+    }
+  },
+  {
+    "id": 1001,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/src/ui/blocked/blocked.html"
+      }
+    },
+    "condition": {
+      "urlFilter": "||xvideos.com^",
+      "resourceTypes": ["main_frame"]
+    }
+  },
+  {
+    "id": 1002,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/src/ui/blocked/blocked.html"
+      }
+    },
+    "condition": {
+      "urlFilter": "||xhamster.com^",
+      "resourceTypes": ["main_frame"]
+    }
+  },
+  {
+    "id": 1003,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/src/ui/blocked/blocked.html"
+      }
+    },
+    "condition": {
+      "urlFilter": "||redtube.com^",
+      "resourceTypes": ["main_frame"]
+    }
+  },
+  {
+    "id": 1004,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/src/ui/blocked/blocked.html"
+      }
+    },
+    "condition": {
+      "urlFilter": "||youporn.com^",
+      "resourceTypes": ["main_frame"]
+    }
+  },
+  {
+    "id": 1005,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/src/ui/blocked/blocked.html"
+      }
+    },
+    "condition": {
+      "urlFilter": "||tube8.com^",
+      "resourceTypes": ["main_frame"]
+    }
+  },
+  {
+    "id": 1006,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/src/ui/blocked/blocked.html"
+      }
+    },
+    "condition": {
+      "urlFilter": "||spankbang.com^",
+      "resourceTypes": ["main_frame"]
+    }
+  },
+  {
+    "id": 1007,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/src/ui/blocked/blocked.html"
+      }
+    },
+    "condition": {
+      "urlFilter": "||chaturbate.com^",
+      "resourceTypes": ["main_frame"]
+    }
+  },
+  {
+    "id": 1008,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "regexFilter": ".*\\.(xxx|porn|sex|adult)($|/.*)",
+      "resourceTypes": ["main_frame", "sub_frame"]
+    }
+  },
+  {
+    "id": 1009,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "regexFilter": ".*/ads?[/_-](porn|adult|sexy|nsfw).*",
+      "resourceTypes": ["image", "script", "sub_frame"]
+    }
+  }
+]
