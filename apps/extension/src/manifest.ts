@@ -47,7 +47,11 @@ export default defineManifest((options: ManifestOptions): ManifestV3Export => {
     content_scripts: [
       {
         matches: ["<all_urls>"],
-        js: ["src/content/censor.ts", "src/content/text-filter.ts"],
+        js: [
+          "src/content/censor.ts",
+          "src/content/text-filter.ts",
+          "src/content/search-blocker.ts",
+        ],
         run_at: "document_idle",
         all_frames: false,
       },

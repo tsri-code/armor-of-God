@@ -1,11 +1,14 @@
 /**
  * Storage utilities for extension settings and data
  */
-import browser from './browser';
-import { Settings, StorageKeys, DEFAULT_SETTINGS, Verse } from '@shared/index';
+import browser from "./browser";
+import { Settings, StorageKeys, DEFAULT_SETTINGS, Verse } from "@shared/index";
 
 // Type for storage change listener
-type StorageChangeListener = (changes: { [key: string]: any }, areaName: string) => void;
+type StorageChangeListener = (
+  changes: { [key: string]: any },
+  areaName: string
+) => void;
 
 class ExtensionStorage {
   private listeners: Set<StorageChangeListener> = new Set();
@@ -13,7 +16,7 @@ class ExtensionStorage {
   constructor() {
     // Listen for storage changes and notify listeners
     browser.storage.onChanged.addListener((changes, areaName) => {
-      this.listeners.forEach(listener => listener(changes, areaName));
+      this.listeners.forEach((listener) => listener(changes, areaName));
     });
   }
 
@@ -22,9 +25,15 @@ class ExtensionStorage {
     try {
       const result = await browser.storage.local.get(StorageKeys.SETTINGS);
       const stored = result[StorageKeys.SETTINGS];
-      
+
       if (!stored) {
-        return DEFAULT_SETTINGS;
+        // First time - save and return defaults
+        const defaultSettings = DEFAULT_SETTINGS;
+        await this.setSettings(defaultSettings);
+        console.log(
+          "[Armor of God] No settings found, using defaults with enabled=true"
+        );
+        return defaultSettings;
       }
 
       // Merge with defaults to handle missing properties
@@ -41,8 +50,15 @@ class ExtensionStorage {
         },
       };
     } catch (error) {
-      console.error('Failed to get settings:', error);
-      return DEFAULT_SETTINGS;
+      console.error("Failed to get settings:", error);
+      // Save defaults on error too
+      const defaultSettings = DEFAULT_SETTINGS;
+      try {
+        await this.setSettings(defaultSettings);
+      } catch (e) {
+        // Ignore save error
+      }
+      return defaultSettings;
     }
   }
 
@@ -52,12 +68,12 @@ class ExtensionStorage {
         ...settings,
         lastUpdated: new Date().toISOString(),
       };
-      
+
       await browser.storage.local.set({
         [StorageKeys.SETTINGS]: updatedSettings,
       });
     } catch (error) {
-      console.error('Failed to set settings:', error);
+      console.error("Failed to set settings:", error);
       throw error;
     }
   }
@@ -83,7 +99,7 @@ class ExtensionStorage {
         },
       });
     } catch (error) {
-      console.error('Failed to cache verse:', error);
+      console.error("Failed to cache verse:", error);
     }
   }
 
@@ -114,7 +130,7 @@ class ExtensionStorage {
         date: cached.date,
       };
     } catch (error) {
-      console.error('Failed to get cached verse:', error);
+      console.error("Failed to get cached verse:", error);
       return null;
     }
   }
@@ -152,7 +168,7 @@ class ExtensionStorage {
     try {
       await browser.storage.local.clear();
     } catch (error) {
-      console.error('Failed to clear storage:', error);
+      console.error("Failed to clear storage:", error);
       throw error;
     }
   }
@@ -172,7 +188,7 @@ class ExtensionStorage {
       const usage = await browser.storage.local.getBytesInUse();
       return usage || 0;
     } catch (error) {
-      console.error('Failed to get storage usage:', error);
+      console.error("Failed to get storage usage:", error);
       return 0;
     }
   }
@@ -185,10 +201,12 @@ class ExtensionStorage {
       const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
 
       Object.entries(all).forEach(([key, value]) => {
-        if (key.startsWith(StorageKeys.VERSE_CACHE) && 
-            value && 
-            typeof value === 'object' && 
-            'cachedAt' in value) {
+        if (
+          key.startsWith(StorageKeys.VERSE_CACHE) &&
+          value &&
+          typeof value === "object" &&
+          "cachedAt" in value
+        ) {
           const cacheAge = now - (value as any).cachedAt;
           if (cacheAge > maxAge) {
             keysToRemove.push(key);
@@ -201,7 +219,7 @@ class ExtensionStorage {
         console.log(`Cleaned up ${keysToRemove.length} old cache entries`);
       }
     } catch (error) {
-      console.error('Failed to cleanup old cache:', error);
+      console.error("Failed to cleanup old cache:", error);
     }
   }
 }

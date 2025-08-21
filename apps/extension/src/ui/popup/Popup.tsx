@@ -66,8 +66,17 @@ function Popup() {
 
   const toggleExtension = async () => {
     try {
-      // Show loading state immediately
-      setData((prev) => ({ ...prev, loading: true }));
+      // Don't show loading screen, just disable button temporarily
+      const currentEnabled = data.settings?.enabled ?? false;
+      const newEnabled = !currentEnabled;
+
+      // Optimistic update - update UI immediately
+      setData((prev) => ({
+        ...prev,
+        settings: prev.settings
+          ? { ...prev.settings, enabled: newEnabled }
+          : ({ enabled: newEnabled } as any),
+      }));
 
       const response = await browser.runtime.sendMessage({
         type: "TOGGLE_EXTENSION",
@@ -78,28 +87,32 @@ function Popup() {
         setData((prev) => ({
           ...prev,
           settings: response.settings,
-          loading: false,
         }));
 
         // Visual feedback
-        const newEnabled = response.settings.enabled;
-        console.log(`Extension is now ${newEnabled ? "ENABLED" : "DISABLED"}`);
+        console.log(
+          `Extension is now ${response.settings.enabled ? "ENABLED" : "DISABLED"}`
+        );
       } else if (response?.enabled !== undefined) {
-        // Fallback to simple enabled update
+        // Update with response
         setData((prev) => ({
           ...prev,
           settings: prev.settings
             ? { ...prev.settings, enabled: response.enabled }
             : ({ enabled: response.enabled } as any),
-          loading: false,
         }));
       } else if (response?.error) {
         console.error("Toggle failed:", response.error);
-        setData((prev) => ({ ...prev, loading: false }));
+        // Revert optimistic update
+        setData((prev) => ({
+          ...prev,
+          settings: prev.settings
+            ? { ...prev.settings, enabled: currentEnabled }
+            : ({ enabled: currentEnabled } as any),
+        }));
       }
     } catch (error) {
       console.error("Failed to toggle extension:", error);
-      setData((prev) => ({ ...prev, loading: false }));
       // Force a reload to get current state
       setTimeout(loadPopupData, 100);
     }
