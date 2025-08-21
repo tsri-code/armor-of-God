@@ -12,17 +12,53 @@ let settings: Settings | null = null;
 let isInitialized = false;
 let textObserver: MutationObserver | null = null;
 
+// Debug system
+const DEBUG = true;
+let debugStats = {
+  textElementsScanned: 0,
+  textElementsFiltered: 0,
+  searchesBlocked: 0,
+  inappropriateSearches: 0,
+  lastActivity: new Date().toISOString(),
+};
+
+function debugLog(message: string, data?: any): void {
+  if (DEBUG) {
+    console.log(`[Armor of God - Text Filter] ${message}`, data || "");
+    debugStats.lastActivity = new Date().toISOString();
+  }
+}
+
+// Expose debug interface globally
+declare global {
+  interface Window {
+    armorOfGodTextFilter: {
+      isActive: boolean;
+      stats: typeof debugStats;
+      settings: Settings | null;
+      testFilter: (text: string) => TextScanResult;
+      forceRescan: () => void;
+    };
+  }
+}
+
 // Word lists with severity levels
 const EXPLICIT_WORDS = nsfwWords.explicit;
 const SUGGESTIVE_WORDS = nsfwWords.suggestive;
 const MODERATE_WORDS = nsfwWords.moderate;
 const BLOCKED_SEARCHES = nsfwWords.searches;
 
-// URL patterns for different sites
-const GOOGLE_IMAGES_PATTERN =
-  /images\.google\.|google\..+\/imghp|google\..+\/search.*tbm=isch/i;
+// URL patterns for different sites - More comprehensive patterns
+const GOOGLE_IMAGES_PATTERNS = [
+  /images\.google\./i,
+  /google\..+\/imghp/i,
+  /google\..+\/search.*[?&]tbm=isch/i,
+  /www\.google\..+\/search.*[?&]tbm=isch/i,
+];
+
 const SEARCH_PATTERNS = [
   /google\..+\/search/i,
+  /www\.google\..+\/search/i,
   /bing\.com\/search/i,
   /duckduckgo\.com/i,
   /search\.yahoo\.com/i,
@@ -40,22 +76,35 @@ async function initialize(): Promise<void> {
   if (isInitialized) return;
 
   try {
-    console.log("[Armor of God] Text filter initializing");
+    debugLog("Text filter initializing...");
 
     // Get settings
     settings = await getSettings();
 
     if (!settings?.enabled) {
-      console.log("[Armor of God] Text filtering disabled");
+      debugLog("Text filtering disabled by settings");
+      exposeDebugInterface(false);
       return;
     }
 
+    debugLog(`Settings loaded:`, {
+      enabled: settings.enabled,
+      modules: settings.modules,
+      url: window.location.href,
+    });
+
     // Handle different site types
+    const currentUrl = window.location.href;
+    debugLog(`Analyzing URL: ${currentUrl}`);
+
     if (isGoogleImages()) {
+      debugLog("Detected Google Images - applying aggressive filtering");
       initializeGoogleImages();
     } else if (isSearchEngine()) {
+      debugLog("Detected search engine - applying search filtering");
       initializeSearchEngine();
     } else {
+      debugLog("Detected general website - applying standard text filtering");
       initializeGeneralSite();
     }
 
@@ -66,10 +115,31 @@ async function initialize(): Promise<void> {
     setupTextObserver();
 
     isInitialized = true;
-    console.log("[Armor of God] Text filter initialized");
+    debugLog("Text filter initialization complete");
+
+    // Expose debug interface
+    exposeDebugInterface(true);
   } catch (error) {
-    console.error("[Armor of God] Text filter initialization failed:", error);
+    debugLog(`Text filter initialization failed: ${error.message}`, error);
+    exposeDebugInterface(false);
   }
+}
+
+// Expose debug interface globally
+function exposeDebugInterface(isActive: boolean): void {
+  window.armorOfGodTextFilter = {
+    isActive,
+    stats: debugStats,
+    settings,
+    testFilter: analyzeText,
+    forceRescan: () => {
+      debugLog("Forcing manual rescan...");
+      scanPageText();
+      setupTextObserver();
+    },
+  };
+
+  debugLog(`Debug interface exposed - Active: ${isActive}`);
 }
 
 // Get settings from background
@@ -87,7 +157,17 @@ async function getSettings(): Promise<Settings | null> {
 
 // Check if current page is Google Images
 function isGoogleImages(): boolean {
-  return GOOGLE_IMAGES_PATTERN.test(window.location.href);
+  const url = window.location.href;
+  const isGoogleImages = GOOGLE_IMAGES_PATTERNS.some((pattern) =>
+    pattern.test(url)
+  );
+
+  debugLog(`Checking if Google Images: ${url} -> ${isGoogleImages}`);
+  if (isGoogleImages) {
+    debugLog(`Matched Google Images pattern for: ${url}`);
+  }
+
+  return isGoogleImages;
 }
 
 // Check if current page is a search engine
@@ -144,13 +224,31 @@ function isInappropriateSearch(query: string): boolean {
   if (!query) return false;
 
   const normalizedQuery = query.toLowerCase().trim();
+  debugLog(
+    `Checking search query: "${query}" (normalized: "${normalizedQuery}")`
+  );
 
-  return BLOCKED_SEARCHES.some((blockedTerm) => {
-    return (
+  const isBlocked = BLOCKED_SEARCHES.some((blockedTerm) => {
+    const matches =
       normalizedQuery.includes(blockedTerm.toLowerCase()) ||
-      normalizedQuery === blockedTerm.toLowerCase()
-    );
+      normalizedQuery === blockedTerm.toLowerCase();
+    if (matches) {
+      debugLog(`Search blocked - matched term: "${blockedTerm}"`);
+    }
+    return matches;
   });
+
+  if (isBlocked) {
+    debugStats.inappropriateSearches++;
+    debugStats.searchesBlocked++;
+    debugLog(
+      `Search "${query}" blocked - total blocked: ${debugStats.searchesBlocked}`
+    );
+  } else {
+    debugLog(`Search "${query}" allowed`);
+  }
+
+  return isBlocked;
 }
 
 // Block the current page with Christian message
@@ -432,6 +530,8 @@ function scanPageText(): void {
 
 // Analyze text content for inappropriate language
 function analyzeText(text: string): TextScanResult {
+  debugStats.textElementsScanned++;
+
   const normalizedText = text.toLowerCase();
   let score = 0;
   const matchedWords: string[] = [];
@@ -445,6 +545,7 @@ function analyzeText(text: string): TextScanResult {
       score += matches.length * 10;
       matchedWords.push(word);
       severity = "explicit";
+      debugLog(`Found explicit word "${word}" ${matches.length} time(s)`);
     }
   });
 
@@ -456,6 +557,7 @@ function analyzeText(text: string): TextScanResult {
       score += matches.length * 5;
       matchedWords.push(word);
       if (severity !== "explicit") severity = "suggestive";
+      debugLog(`Found suggestive word "${word}" ${matches.length} time(s)`);
     }
   });
 
@@ -466,13 +568,17 @@ function analyzeText(text: string): TextScanResult {
     if (matches) {
       score += matches.length * 2;
       matchedWords.push(word);
+      debugLog(`Found moderate word "${word}" ${matches.length} time(s)`);
     }
   });
 
   // Determine action based on score and settings
   let action: "block" | "blur" | "warn" | "allow" = "allow";
 
-  if (!settings) return { score, matchedWords, severity, action };
+  if (!settings) {
+    debugLog("No settings available - allowing content");
+    return { score, matchedWords, severity, action };
+  }
 
   if (score >= 20 || severity === "explicit") {
     action = "block";
@@ -480,6 +586,13 @@ function analyzeText(text: string): TextScanResult {
     action = "blur";
   } else if (score >= 5) {
     action = "warn";
+  }
+
+  if (action !== "allow") {
+    debugStats.textElementsFiltered++;
+    debugLog(
+      `Text filtered: score=${score}, severity=${severity}, action=${action}, words=[${matchedWords.join(", ")}]`
+    );
   }
 
   return { score, matchedWords, severity, action };

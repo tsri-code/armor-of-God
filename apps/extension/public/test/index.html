@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Armor of God - Extension Test Suite</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .header h1 {
+        color: #1e40af;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+      .header p {
+        color: #6b7280;
+        font-size: 1.1rem;
+      }
+      .test-section {
+        margin-bottom: 40px;
+        padding: 25px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+      }
+      .test-section.critical {
+        border-color: #dc2626;
+        background: #fef2f2;
+      }
+      .test-section.warning {
+        border-color: #f59e0b;
+        background: #fffbeb;
+      }
+      .test-section.info {
+        border-color: #3b82f6;
+        background: #eff6ff;
+      }
+      .test-section h2 {
+        color: #1f2937;
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .test-item {
+        margin: 15px 0;
+        padding: 15px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: white;
+      }
+      .test-item h3 {
+        margin: 0 0 10px 0;
+        color: #374151;
+      }
+      .test-content {
+        margin: 10px 0;
+        padding: 10px;
+        background: #f9fafb;
+        border-radius: 4px;
+      }
+      .status {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-left: 10px;
+      }
+      .status.pass {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .status.fail {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .status.pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .search-form {
+        display: flex;
+        gap: 10px;
+        margin: 15px 0;
+      }
+      .search-form input {
+        flex: 1;
+        padding: 10px;
+        border: 2px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 1rem;
+      }
+      .search-form button {
+        padding: 10px 20px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .search-form button:hover {
+        background: #2563eb;
+      }
+      .debug-info {
+        background: #1f2937;
+        color: #e5e7eb;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.9rem;
+        margin: 15px 0;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .test-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+      }
+      .links-section a {
+        display: inline-block;
+        margin: 5px;
+        padding: 8px 16px;
+        background: #f3f4f6;
+        color: #374151;
+        text-decoration: none;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+      }
+      .links-section a:hover {
+        background: #e5e7eb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🛡️ Armor of God Test Suite</h1>
+        <p>
+          Comprehensive testing for content filtering and protection systems
+        </p>
+      </div>
+
+      <!-- Real-time Status -->
+      <div class="test-section info">
+        <h2>
+          📊 Extension Status
+          <span class="status pending" id="extension-status">Checking...</span>
+        </h2>
+        <div class="test-content">
+          <p>
+            <strong>Extension Active:</strong>
+            <span id="extension-active">Unknown</span>
+          </p>
+          <p>
+            <strong>Text Filtering:</strong>
+            <span id="text-filtering">Unknown</span>
+          </p>
+          <p>
+            <strong>Image Scanning:</strong>
+            <span id="image-scanning">Unknown</span>
+          </p>
+          <p>
+            <strong>Search Blocking:</strong>
+            <span id="search-blocking">Unknown</span>
+          </p>
+          <div class="debug-info" id="debug-log">
+            Loading extension status...
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Filtering Tests -->
+      <div class="test-section critical">
+        <h2>🔤 Text Filtering Tests</h2>
+
+        <div class="test-item">
+          <h3>Explicit Content Test</h3>
+          <div class="test-content">
+            <p>
+              This paragraph contains the word porn which should be blocked or
+              blurred.
+            </p>
+            <p>Adult content and xxx material should also be filtered.</p>
+            <p>
+              Words like fuck and explicit sexual content should trigger
+              filtering.
+            </p>
+          </div>
+        </div>
+
+        <div class="test-item">
+          <h3>Suggestive Content Test</h3>
+          <div class="test-content">
+            <p>
+              This text mentions sexy lingerie and hot models in revealing
+              bikinis.
+            </p>
+            <p>
+              Provocative and seductive content should be filtered
+              appropriately.
+            </p>
+            <p>Kinky and naughty references should trigger warnings.</p>
+          </div>
+        </div>
+
+        <div class="test-item">
+          <h3>Mixed Content Test</h3>
+          <div class="test-content">
+            <p>Normal content mixed with sexy images and adult themes.</p>
+            <p>Some regular text about technology and programming.</p>
+            <p>Then suddenly porn websites and explicit material appear.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Blocking Tests -->
+      <div class="test-section critical">
+        <h2>🚫 Search Blocking Tests</h2>
+
+        <div class="test-item">
+          <h3>Direct Search Tests</h3>
+          <div class="search-form">
+            <input
+              type="text"
+              id="test-search"
+              placeholder="Enter search term (e.g., 'sexy', 'porn', 'nude')"
+            />
+            <button onclick="testSearch()">Test Search Block</button>
+          </div>
+          <div id="search-results"></div>
+        </div>
+
+        <div class="test-item">
+          <h3>Google Images Link Tests</h3>
+          <div class="links-section">
+            <a href="https://images.google.com/search?q=sexy" target="_blank"
+              >Google Images: "sexy"</a
+            >
+            <a
+              href="https://images.google.com/search?q=lingerie"
+              target="_blank"
+              >Google Images: "lingerie"</a
+            >
+            <a href="https://images.google.com/search?q=bikini" target="_blank"
+              >Google Images: "bikini"</a
+            >
+            <a
+              href="https://images.google.com/search?q=hot+models"
+              target="_blank"
+              >Google Images: "hot models"</a
+            >
+          </div>
+          <p>
+            <em>These links should be blocked or redirected when clicked.</em>
+          </p>
+        </div>
+      </div>
+
+      <!-- Image Scanning Tests -->
+      <div class="test-section warning">
+        <h2>🖼️ Image Scanning Tests</h2>
+
+        <div class="test-item">
+          <h3>Test Images (Placeholders)</h3>
+          <div class="image-grid">
+            <img
+              src="https://via.placeholder.com/300x200/ff69b4/ffffff?text=SUGGESTIVE"
+              class="test-image"
+              alt="Test Image 1"
+            />
+            <img
+              src="https://via.placeholder.com/300x200/dc143c/ffffff?text=EXPLICIT"
+              class="test-image"
+              alt="Test Image 2"
+            />
+            <img
+              src="https://via.placeholder.com/300x200/32cd32/ffffff?text=SAFE"
+              class="test-image"
+              alt="Test Image 3"
+            />
+            <img
+              src="https://via.placeholder.com/300x200/ffa500/ffffff?text=BORDERLINE"
+              class="test-image"
+              alt="Test Image 4"
+            />
+          </div>
+          <p>
+            <em
+              >Images should show filtering overlays, blurring, or blocking
+              based on content.</em
+            >
+          </p>
+        </div>
+      </div>
+
+      <!-- Website Tests -->
+      <div class="test-section warning">
+        <h2>🌐 Website Filtering Tests</h2>
+
+        <div class="test-item">
+          <h3>External Website Links</h3>
+          <div class="links-section">
+            <a href="https://www.victoriassecret.com/lingerie" target="_blank"
+              >Victoria's Secret Lingerie</a
+            >
+            <a href="https://www.si.com/swimsuit" target="_blank"
+              >Sports Illustrated Swimsuit</a
+            >
+            <a
+              href="https://www.instagram.com/explore/tags/bikini/"
+              target="_blank"
+              >Instagram Bikini Tag</a
+            >
+          </div>
+          <p>
+            <em>These sites should show content filtering when visited.</em>
+          </p>
+        </div>
+      </div>
+
+      <!-- Debug Controls -->
+      <div class="test-section info">
+        <h2>🔧 Debug & Control Panel</h2>
+
+        <div class="test-item">
+          <h3>Manual Tests</h3>
+          <button
+            onclick="checkExtensionStatus()"
+            style="
+              margin: 5px;
+              padding: 10px 20px;
+              background: #10b981;
+              color: white;
+              border: none;
+              border-radius: 6px;
+            "
+          >
+            Refresh Status
+          </button>
+          <button
+            onclick="testTextFiltering()"
+            style="
+              margin: 5px;
+              padding: 10px 20px;
+              background: #8b5cf6;
+              color: white;
+              border: none;
+              border-radius: 6px;
+            "
+          >
+            Test Text Filtering
+          </button>
+          <button
+            onclick="testImageScanning()"
+            style="
+              margin: 5px;
+              padding: 10px 20px;
+              background: #f59e0b;
+              color: white;
+              border: none;
+              border-radius: 6px;
+            "
+          >
+            Test Image Scanning
+          </button>
+          <button
+            onclick="clearDebugLog()"
+            style="
+              margin: 5px;
+              padding: 10px 20px;
+              background: #6b7280;
+              color: white;
+              border: none;
+              border-radius: 6px;
+            "
+          >
+            Clear Log
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Global test state
+      let extensionActive = false;
+      let debugLog = [];
+
+      // Log function
+      function log(message, type = "info") {
+        const timestamp = new Date().toLocaleTimeString();
+        debugLog.push(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
+        updateDebugLog();
+      }
+
+      // Update debug log display
+      function updateDebugLog() {
+        const logElement = document.getElementById("debug-log");
+        if (logElement) {
+          logElement.innerHTML = debugLog.slice(-20).join("\n");
+          logElement.scrollTop = logElement.scrollHeight;
+        }
+      }
+
+      // Clear debug log
+      function clearDebugLog() {
+        debugLog = [];
+        updateDebugLog();
+      }
+
+      // Check extension status
+      async function checkExtensionStatus() {
+        log("Checking extension status...");
+
+        try {
+          // Check if extension is injecting scripts
+          const hasArmorClasses = document.querySelector(
+            ".armor-of-god-blurred, .armor-of-god-warned, .armor-of-god-blocked"
+          );
+          const hasArmorOverlays = document.querySelector(
+            ".armor-protection-overlay"
+          );
+
+          // Try to detect if content scripts are running
+          const textFilterActive = window.armorOfGodTextFilter !== undefined;
+          const imageFilterActive = window.armorOfGodImageFilter !== undefined;
+
+          // Update status displays
+          document.getElementById("extension-active").textContent =
+            hasArmorClasses || hasArmorOverlays ? "YES" : "NO";
+          document.getElementById("text-filtering").textContent =
+            textFilterActive ? "Active" : "Inactive";
+          document.getElementById("image-scanning").textContent =
+            imageFilterActive ? "Active" : "Inactive";
+
+          const overallStatus = document.getElementById("extension-status");
+          if (
+            hasArmorClasses ||
+            hasArmorOverlays ||
+            textFilterActive ||
+            imageFilterActive
+          ) {
+            overallStatus.textContent = "Active";
+            overallStatus.className = "status pass";
+            extensionActive = true;
+            log("Extension is active and running", "success");
+          } else {
+            overallStatus.textContent = "Inactive";
+            overallStatus.className = "status fail";
+            extensionActive = false;
+            log(
+              "Extension is not active - content scripts not detected",
+              "error"
+            );
+          }
+        } catch (error) {
+          log(`Error checking extension status: ${error.message}`, "error");
+        }
+      }
+
+      // Test search blocking
+      function testSearch() {
+        const query = document.getElementById("test-search").value;
+        log(`Testing search block for: "${query}"`);
+
+        // Try to simulate a search
+        const resultsDiv = document.getElementById("search-results");
+
+        // Check if the query would be blocked
+        const blockedTerms = [
+          "porn",
+          "sex",
+          "nude",
+          "naked",
+          "sexy",
+          "adult",
+          "erotic",
+        ];
+        const isBlocked = blockedTerms.some((term) =>
+          query.toLowerCase().includes(term)
+        );
+
+        if (isBlocked) {
+          resultsDiv.innerHTML = `<div class="status fail">⚠️ Search "${query}" should be BLOCKED</div>`;
+          log(`Search "${query}" should be blocked`, "warning");
+        } else {
+          resultsDiv.innerHTML = `<div class="status pass">✅ Search "${query}" is safe</div>`;
+          log(`Search "${query}" is considered safe`, "info");
+        }
+      }
+
+      // Test text filtering
+      function testTextFiltering() {
+        log("Testing text filtering on page content...");
+
+        const testElements = document.querySelectorAll(".test-content p");
+        let filteredCount = 0;
+        let totalCount = testElements.length;
+
+        testElements.forEach((element) => {
+          const isFiltered =
+            element.style.filter ||
+            element.style.display === "none" ||
+            element.style.backgroundColor;
+          if (isFiltered) {
+            filteredCount++;
+            log(
+              `Text element filtered: ${element.textContent.substring(0, 50)}...`,
+              "success"
+            );
+          }
+        });
+
+        log(
+          `Text filtering results: ${filteredCount}/${totalCount} elements filtered`,
+          filteredCount > 0 ? "success" : "warning"
+        );
+      }
+
+      // Test image scanning
+      function testImageScanning() {
+        log("Testing image scanning...");
+
+        const images = document.querySelectorAll(".test-image");
+        let scannedCount = 0;
+
+        images.forEach((img) => {
+          const isScanned =
+            img.hasAttribute("data-armor-processed") ||
+            img.classList.contains("armor-of-god-blurred") ||
+            img.parentElement?.querySelector(".armor-protection-overlay");
+
+          if (isScanned) {
+            scannedCount++;
+            log(`Image scanned: ${img.alt}`, "success");
+          } else {
+            log(`Image not scanned: ${img.alt}`, "warning");
+          }
+        });
+
+        log(
+          `Image scanning results: ${scannedCount}/${images.length} images processed`,
+          scannedCount > 0 ? "success" : "warning"
+        );
+      }
+
+      // Initialize tests
+      document.addEventListener("DOMContentLoaded", function () {
+        log("Test suite loaded");
+
+        // Initial status check
+        setTimeout(checkExtensionStatus, 1000);
+
+        // Periodic status updates
+        setInterval(checkExtensionStatus, 5000);
+
+        // Log page interactions
+        document.addEventListener("click", function (e) {
+          if (e.target.tagName === "A") {
+            log(`Link clicked: ${e.target.href}`, "info");
+          }
+        });
+      });
+
+      // Expose test functions globally for debugging
+      window.armorTestSuite = {
+        checkExtensionStatus,
+        testSearch,
+        testTextFiltering,
+        testImageScanning,
+        log,
+        clearDebugLog,
+      };
+    </script>
+  </body>
+</html>

@@ -60,6 +60,7 @@ export default defineManifest((options: ManifestOptions): ManifestV3Export => {
           "assets/Icons/**/*",
           "public/models/**/*",
           "src/ui/blocked/blocked.html",
+          "test/index.html",
         ],
         matches: ["<all_urls>"],
       },

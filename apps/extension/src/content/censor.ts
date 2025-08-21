@@ -19,6 +19,35 @@ const scannedImages = new WeakSet<HTMLImageElement>();
 const MAX_CONCURRENT_SCANS = 3;
 const SCAN_DEBOUNCE_MS = 100;
 
+// Debug system for image scanning
+const DEBUG = true;
+let imageDebugStats = {
+  imagesScanned: 0,
+  imagesBlurred: 0,
+  imagesBlocked: 0,
+  imagesWarned: 0,
+  lastActivity: new Date().toISOString(),
+};
+
+function imageDebugLog(message: string, data?: any): void {
+  if (DEBUG) {
+    console.log(`[Armor of God - Image Scanner] ${message}`, data || "");
+    imageDebugStats.lastActivity = new Date().toISOString();
+  }
+}
+
+// Expose debug interface globally
+declare global {
+  interface Window {
+    armorOfGodImageFilter: {
+      isActive: boolean;
+      stats: typeof imageDebugStats;
+      settings: Settings | null;
+      forceScan: () => void;
+    };
+  }
+}
+
 // Enhanced filtering for inappropriate searches
 const GOOGLE_IMAGES_PATTERN =
   /images\.google\.|google\..+\/imghp|google\..+\/search.*tbm=isch/i;
@@ -52,15 +81,27 @@ function requiresAggressiveFiltering(): boolean {
 // Initialize the content script
 async function initialize(): Promise<void> {
   try {
-    console.log("[Armor of God] Content script initializing");
+    imageDebugLog("Image scanner initializing...");
 
     // Get initial settings
     settings = await getSettings();
 
     if (!settings?.enabled || !settings?.modules?.imageScanning) {
-      console.log("[Armor of God] Image scanning disabled");
+      imageDebugLog("Image scanning disabled by settings");
+      exposeImageDebugInterface(false);
       return;
     }
+
+    imageDebugLog(`Image scanning settings:`, {
+      enabled: settings.enabled,
+      imageScanning: settings.modules.imageScanning,
+      thresholds: settings.thresholds,
+      url: window.location.href,
+    });
+
+    // Check if aggressive filtering is needed
+    const needsAggressive = requiresAggressiveFiltering();
+    imageDebugLog(`Aggressive filtering required: ${needsAggressive}`);
 
     // Setup intersection observer for viewport detection
     setupIntersectionObserver();
@@ -74,13 +115,33 @@ async function initialize(): Promise<void> {
     // Listen for settings changes
     browser.runtime.onMessage.addListener(handleMessage);
 
-    console.log("[Armor of God] Content script initialized");
+    // Expose debug interface
+    exposeImageDebugInterface(true);
+
+    imageDebugLog("Image scanner initialization complete");
   } catch (error) {
-    console.error(
-      "[Armor of God] Content script initialization failed:",
+    imageDebugLog(
+      `Image scanner initialization failed: ${error.message}`,
       error
     );
+    exposeImageDebugInterface(false);
   }
+}
+
+// Expose image debug interface globally
+function exposeImageDebugInterface(isActive: boolean): void {
+  window.armorOfGodImageFilter = {
+    isActive,
+    stats: imageDebugStats,
+    settings,
+    forceScan: () => {
+      imageDebugLog("Forcing manual image scan...");
+      scanExistingImages();
+      processQueue();
+    },
+  };
+
+  imageDebugLog(`Image debug interface exposed - Active: ${isActive}`);
 }
 
 // Get current settings from background
@@ -399,20 +460,34 @@ async function applyAction(
   result: ScanResult,
   context: ImageScanContext
 ): Promise<void> {
+  imageDebugLog(`Applying action "${result.action}" to image:`, {
+    src: img.src.substring(0, 100),
+    score: result.score,
+    predictions: result.predictions,
+  });
+
   switch (result.action) {
     case "block":
       blockImage(img, result);
+      imageDebugStats.imagesBlocked++;
       break;
     case "blur":
       blurImage(img, result);
+      imageDebugStats.imagesBlurred++;
       break;
     case "warn":
       warnImage(img, result);
+      imageDebugStats.imagesWarned++;
       break;
     case "allow":
       // No action needed
       break;
   }
+
+  imageDebugStats.imagesScanned++;
+  imageDebugLog(
+    `Image processing stats: Scanned=${imageDebugStats.imagesScanned}, Blurred=${imageDebugStats.imagesBlurred}, Blocked=${imageDebugStats.imagesBlocked}, Warned=${imageDebugStats.imagesWarned}`
+  );
 }
 
 // Block an image completely

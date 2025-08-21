@@ -32,7 +32,12 @@
     "slut",
     "stripper",
     "escort",
-    "hooker"
+    "hooker",
+    "explicit",
+    "hardcore",
+    "fetish",
+    "bdsm",
+    "porno"
   ],
   "suggestive": [
     "sexy",
@@ -64,7 +69,12 @@
     "panties",
     "bra",
     "bikini",
-    "thong"
+    "thong",
+    "swimsuit",
+    "topless",
+    "scantily",
+    "cleavage",
+    "suggestive"
   ],
   "moderate": [
     "dating",
@@ -93,6 +103,7 @@
   ],
   "searches": [
     "porn",
+    "pornography",
     "sex",
     "nude",
     "naked",
@@ -102,12 +113,26 @@
     "sexy",
     "hot girls",
     "hot guys",
+    "hot women",
+    "hot men",
     "bikini",
     "lingerie",
     "strip",
+    "stripper",
     "escort",
     "prostitute",
     "hookup",
-    "dating"
+    "dating",
+    "nsfw",
+    "explicit",
+    "fetish",
+    "bdsm",
+    "hardcore",
+    "swimsuit models",
+    "victoria secret",
+    "models",
+    "revealing",
+    "provocative",
+    "seductive"
   ]
 }
