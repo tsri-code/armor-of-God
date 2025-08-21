@@ -116,55 +116,61 @@ function Popup() {
           </div>
           <h1 className="font-bold text-xl mb-2">Armor of God</h1>
 
-          {/* Large Toggle Button */}
+          {/* Large Toggle Button with Clear Visual Feedback */}
           <button
             onClick={toggleExtension}
-            className={`w-32 h-16 rounded-xl relative transition-all duration-300 mb-3 ${
+            className={`w-40 h-20 rounded-2xl relative transition-all duration-300 mb-3 border-4 ${
               isEnabled
-                ? "bg-white/30 hover:bg-white/40"
-                : "bg-white/20 hover:bg-white/30"
+                ? "bg-green-500 border-green-400 hover:bg-green-600"
+                : "bg-gray-400 border-gray-300 hover:bg-gray-500"
             }`}
           >
-            <div
-              className={`w-12 h-12 bg-white rounded-full absolute top-2 transition-transform duration-300 flex items-center justify-center ${
-                isEnabled ? "translate-x-16" : "translate-x-2"
-              }`}
-            >
+            {/* Big Checkmark or X */}
+            <div className="absolute inset-0 flex items-center justify-center">
               {isEnabled ? (
                 <svg
-                  className="w-6 h-6 text-green-600"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+                  className="w-12 h-12 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  viewBox="0 0 24 24"
                 >
                   <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
                   />
                 </svg>
               ) : (
                 <svg
-                  className="w-6 h-6 text-gray-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+                  className="w-12 h-12 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  viewBox="0 0 24 24"
                 >
                   <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
               )}
             </div>
+
+            {/* ON/OFF Label */}
+            <div className="absolute bottom-1 left-0 right-0 text-white font-bold text-xs">
+              {isEnabled ? "ON" : "OFF"}
+            </div>
           </button>
 
-          <p className="text-white/90 font-medium">
-            {isEnabled ? "Protection Active" : "Protection Disabled"}
+          <p className="text-white font-bold text-lg">
+            {isEnabled ? "✓ Protection Active" : "✗ Protection Disabled"}
           </p>
-          <p className="text-white/70 text-sm">
+          <p className="text-white/90 text-sm">
             {isEnabled
-              ? "Filtering content and enforcing safe search"
-              : "Click above to enable protection"}
+              ? "All filters are working"
+              : "Click the button above to enable"}
           </p>
         </div>
       </div>

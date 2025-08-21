@@ -144,16 +144,59 @@ function exposeImageDebugInterface(isActive: boolean): void {
   imageDebugLog(`Image debug interface exposed - Active: ${isActive}`);
 }
 
-// Get current settings from background
+// Get current settings from background with better error handling
 async function getSettings(): Promise<Settings | null> {
   try {
+    // Check if browser API is available
+    if (!browser || !browser.runtime || !browser.runtime.sendMessage) {
+      console.warn("[Armor of God] Browser API not ready, using defaults");
+      return {
+        enabled: true,
+        modules: {
+          imageScanning: true,
+          videoScanning: false,
+          textFiltering: true,
+          safeSearch: true,
+          urlBlocking: true,
+        },
+        thresholds: {
+          blur: 0.75,
+          block: 0.9,
+          warning: 0.6,
+        },
+        whitelist: [],
+        blacklist: [],
+        schedules: [],
+        lastUpdated: new Date().toISOString(),
+      } as Settings;
+    }
+
     const response = await browser.runtime.sendMessage({
       type: "GET_SETTINGS",
     });
     return response?.error ? null : response;
   } catch (error) {
     console.error("[Armor of God] Failed to get settings:", error);
-    return null;
+    // Return default settings on error
+    return {
+      enabled: true,
+      modules: {
+        imageScanning: true,
+        videoScanning: false,
+        textFiltering: true,
+        safeSearch: true,
+        urlBlocking: true,
+      },
+      thresholds: {
+        blur: 0.75,
+        block: 0.9,
+        warning: 0.6,
+      },
+      whitelist: [],
+      blacklist: [],
+      schedules: [],
+      lastUpdated: new Date().toISOString(),
+    } as Settings;
   }
 }
 
@@ -664,12 +707,25 @@ window.addEventListener("beforeunload", () => {
   }
 });
 
-// Initialize when DOM is ready
+// Initialize when DOM is ready with delay to ensure storage is ready
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initialize);
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(initialize, 100);
+  });
 } else {
-  initialize();
+  setTimeout(initialize, 100);
 }
 
-// Make browser available globally for this script
-const browser = (globalThis as any).browser || (globalThis as any).chrome;
+// Make browser available globally for this script with better fallback
+const browser = (globalThis as any).browser ||
+  (globalThis as any).chrome || {
+    runtime: {
+      sendMessage: () =>
+        Promise.resolve({ error: "Browser API not available" }),
+    },
+    storage: {
+      local: {
+        get: () => Promise.resolve({}),
+      },
+    },
+  };
