@@ -48,7 +48,6 @@ export default defineManifest((options: ManifestOptions): ManifestV3Export => {
       {
         matches: ["<all_urls>"],
         js: ["src/content/censor.ts"],
-        css: ["src/content/blur.css"],
         run_at: "document_idle",
         all_frames: false,
       },
