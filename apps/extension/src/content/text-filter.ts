@@ -117,11 +117,44 @@ async function initialize(): Promise<void> {
     isInitialized = true;
     debugLog("Text filter initialization complete");
 
+    // Listen for settings changes from background
+    browser.runtime.onMessage.addListener((message) => {
+      if (message.type === "SETTINGS_UPDATED") {
+        handleSettingsUpdate(message.data);
+      }
+    });
+
     // Expose debug interface
     exposeDebugInterface(true);
   } catch (error) {
     debugLog(`Text filter initialization failed: ${error.message}`, error);
     exposeDebugInterface(false);
+  }
+}
+
+// Handle settings updates from background
+function handleSettingsUpdate(newSettings: Settings): void {
+  settings = newSettings;
+
+  debugLog("Settings updated received", {
+    enabled: settings?.enabled,
+    textFiltering: settings?.modules?.textFiltering,
+  });
+
+  if (!settings?.enabled || !settings?.modules?.textFiltering) {
+    debugLog("Text filtering disabled - stopping");
+    // Update debug interface
+    if (window.armorOfGodTextFilter) {
+      window.armorOfGodTextFilter.isActive = false;
+    }
+  } else {
+    debugLog("Text filtering enabled - restarting");
+    // Update debug interface
+    if (window.armorOfGodTextFilter) {
+      window.armorOfGodTextFilter.isActive = true;
+    }
+    // Rescan page with new settings
+    scanPageText();
   }
 }
 

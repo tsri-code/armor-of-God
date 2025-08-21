@@ -66,19 +66,40 @@ function Popup() {
 
   const toggleExtension = async () => {
     try {
+      // Show loading state immediately
+      setData((prev) => ({ ...prev, loading: true }));
+
       const response = await browser.runtime.sendMessage({
         type: "TOGGLE_EXTENSION",
       });
-      if (response?.enabled !== undefined) {
+
+      if (response?.settings) {
+        // Update with full settings from response
+        setData((prev) => ({
+          ...prev,
+          settings: response.settings,
+          loading: false,
+        }));
+
+        // Visual feedback
+        const newEnabled = response.settings.enabled;
+        console.log(`Extension is now ${newEnabled ? "ENABLED" : "DISABLED"}`);
+      } else if (response?.enabled !== undefined) {
+        // Fallback to simple enabled update
         setData((prev) => ({
           ...prev,
           settings: prev.settings
             ? { ...prev.settings, enabled: response.enabled }
             : ({ enabled: response.enabled } as any),
+          loading: false,
         }));
+      } else if (response?.error) {
+        console.error("Toggle failed:", response.error);
+        setData((prev) => ({ ...prev, loading: false }));
       }
     } catch (error) {
       console.error("Failed to toggle extension:", error);
+      setData((prev) => ({ ...prev, loading: false }));
       // Force a reload to get current state
       setTimeout(loadPopupData, 100);
     }

@@ -205,11 +205,26 @@ function handleMessage(message: any): void {
   if (message.type === "SETTINGS_UPDATED") {
     settings = message.data;
 
+    imageDebugLog("Settings updated received", {
+      enabled: settings?.enabled,
+      imageScanning: settings?.modules?.imageScanning,
+    });
+
     // Re-evaluate scanning if settings changed
     if (!settings?.enabled || !settings?.modules?.imageScanning) {
+      imageDebugLog("Image scanning disabled - cleaning up");
       cleanupBlurredImages();
+      // Update debug interface
+      if (window.armorOfGodImageFilter) {
+        window.armorOfGodImageFilter.isActive = false;
+      }
     } else {
+      imageDebugLog("Image scanning enabled - starting scan");
       scanExistingImages();
+      // Update debug interface
+      if (window.armorOfGodImageFilter) {
+        window.armorOfGodImageFilter.isActive = true;
+      }
     }
   }
 }

@@ -295,7 +295,9 @@ async function toggleExtension(): Promise<any> {
     const settings = await storage.getSettings();
     const newEnabled = !settings.enabled;
 
-    await storage.updateSettings({ enabled: newEnabled });
+    // Update settings with new enabled state
+    const updatedSettings = { ...settings, enabled: newEnabled };
+    await storage.setSettings(updatedSettings);
 
     if (newEnabled) {
       await applyUserRules();
@@ -304,12 +306,28 @@ async function toggleExtension(): Promise<any> {
       await clearAllDynamicRules();
     }
 
+    // CRITICAL: Broadcast settings change to ALL tabs
+    const tabs = await browser.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.id) {
+        try {
+          await browser.tabs.sendMessage(tab.id, {
+            type: "SETTINGS_UPDATED",
+            data: updatedSettings,
+          });
+        } catch (err) {
+          // Tab might not have content script loaded
+          console.debug("Could not send to tab", tab.id);
+        }
+      }
+    }
+
     logger.info(
       "service-worker",
-      `Extension ${newEnabled ? "enabled" : "disabled"}`
+      `Extension ${newEnabled ? "enabled" : "disabled"} - notified ${tabs.length} tabs`
     );
 
-    return { enabled: newEnabled };
+    return { enabled: newEnabled, settings: updatedSettings };
   } catch (error) {
     logger.error("service-worker", "Failed to toggle extension", error);
     return { error: "Failed to toggle extension" };
