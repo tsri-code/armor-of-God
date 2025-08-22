@@ -31,34 +31,33 @@ class ExtensionStorage {
         const defaultSettings = DEFAULT_SETTINGS;
         await this.setSettings(defaultSettings);
         console.log(
-          "[Armor of God] No settings found, using defaults with enabled=true"
+          "[Armor of God] First install - settings initialized with enabled=true"
         );
         return defaultSettings;
       }
 
-      // Merge with defaults to handle missing properties
-      return {
+      // IMPORTANT: Preserve the stored enabled state, don't override with defaults
+      const settings = {
         ...DEFAULT_SETTINGS,
         ...stored,
+        enabled: stored.enabled, // Explicitly preserve enabled state
         modules: {
           ...DEFAULT_SETTINGS.modules,
-          ...stored.modules,
+          ...(stored.modules || {}),
         },
         thresholds: {
           ...DEFAULT_SETTINGS.thresholds,
-          ...stored.thresholds,
+          ...(stored.thresholds || {}),
         },
       };
+
+      console.log(
+        `[Armor of God] Settings loaded - enabled: ${settings.enabled}`
+      );
+      return settings;
     } catch (error) {
       console.error("Failed to get settings:", error);
-      // Save defaults on error too
-      const defaultSettings = DEFAULT_SETTINGS;
-      try {
-        await this.setSettings(defaultSettings);
-      } catch (e) {
-        // Ignore save error
-      }
-      return defaultSettings;
+      return DEFAULT_SETTINGS;
     }
   }
 
@@ -72,6 +71,10 @@ class ExtensionStorage {
       await browser.storage.local.set({
         [StorageKeys.SETTINGS]: updatedSettings,
       });
+
+      console.log(
+        `[Armor of God] Settings saved - enabled: ${updatedSettings.enabled}`
+      );
     } catch (error) {
       console.error("Failed to set settings:", error);
       throw error;

@@ -295,19 +295,29 @@ async function toggleExtension(): Promise<any> {
     const settings = await storage.getSettings();
     const newEnabled = !settings.enabled;
 
+    console.log(
+      `[Service Worker] Toggle requested: ${settings.enabled} -> ${newEnabled}`
+    );
+
     // Update settings with new enabled state
     const updatedSettings = { ...settings, enabled: newEnabled };
     await storage.setSettings(updatedSettings);
 
+    console.log(`[Service Worker] Settings saved with enabled=${newEnabled}`);
+
     if (newEnabled) {
       await applyUserRules();
       await enforceSafeSearch();
+      console.log("[Service Worker] Rules and safe search applied");
     } else {
       await clearAllDynamicRules();
+      console.log("[Service Worker] Dynamic rules cleared");
     }
 
     // CRITICAL: Broadcast settings change to ALL tabs
     const tabs = await browser.tabs.query({});
+    let notifiedCount = 0;
+
     for (const tab of tabs) {
       if (tab.id) {
         try {
@@ -315,6 +325,7 @@ async function toggleExtension(): Promise<any> {
             type: "SETTINGS_UPDATED",
             data: updatedSettings,
           });
+          notifiedCount++;
         } catch (err) {
           // Tab might not have content script loaded
           console.debug("Could not send to tab", tab.id);
@@ -322,13 +333,21 @@ async function toggleExtension(): Promise<any> {
       }
     }
 
+    console.log(
+      `[Service Worker] Extension ${newEnabled ? "ENABLED ✅" : "DISABLED ❌"}`
+    );
+    console.log(
+      `[Service Worker] Notified ${notifiedCount}/${tabs.length} tabs`
+    );
+
     logger.info(
       "service-worker",
-      `Extension ${newEnabled ? "enabled" : "disabled"} - notified ${tabs.length} tabs`
+      `Extension ${newEnabled ? "enabled" : "disabled"} - notified ${notifiedCount} tabs`
     );
 
     return { enabled: newEnabled, settings: updatedSettings };
   } catch (error) {
+    console.error("[Service Worker] Failed to toggle extension:", error);
     logger.error("service-worker", "Failed to toggle extension", error);
     return { error: "Failed to toggle extension" };
   }

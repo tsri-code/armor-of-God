@@ -48,11 +48,12 @@ export default defineManifest((options: ManifestOptions): ManifestV3Export => {
       {
         matches: ["<all_urls>"],
         js: [
+          "src/content/site-blocker.ts", // Run first to block sites immediately
           "src/content/censor.ts",
           "src/content/text-filter.ts",
           "src/content/search-blocker.ts",
         ],
-        run_at: "document_idle",
+        run_at: "document_start", // Run as early as possible for site blocking
         all_frames: false,
       },
     ],

@@ -66,9 +66,10 @@ function Popup() {
 
   const toggleExtension = async () => {
     try {
-      // Don't show loading screen, just disable button temporarily
       const currentEnabled = data.settings?.enabled ?? false;
       const newEnabled = !currentEnabled;
+
+      console.log(`[Popup] Toggling from ${currentEnabled} to ${newEnabled}`);
 
       // Optimistic update - update UI immediately
       setData((prev) => ({
@@ -82,6 +83,8 @@ function Popup() {
         type: "TOGGLE_EXTENSION",
       });
 
+      console.log("[Popup] Toggle response:", response);
+
       if (response?.settings) {
         // Update with full settings from response
         setData((prev) => ({
@@ -91,8 +94,9 @@ function Popup() {
 
         // Visual feedback
         console.log(
-          `Extension is now ${response.settings.enabled ? "ENABLED" : "DISABLED"}`
+          `[Popup] Extension is now ${response.settings.enabled ? "ENABLED ✅" : "DISABLED ❌"}`
         );
+        console.log(`[Popup] All modules status:`, response.settings.modules);
       } else if (response?.enabled !== undefined) {
         // Update with response
         setData((prev) => ({
@@ -101,8 +105,11 @@ function Popup() {
             ? { ...prev.settings, enabled: response.enabled }
             : ({ enabled: response.enabled } as any),
         }));
+        console.log(
+          `[Popup] Extension is now ${response.enabled ? "ENABLED ✅" : "DISABLED ❌"}`
+        );
       } else if (response?.error) {
-        console.error("Toggle failed:", response.error);
+        console.error("[Popup] Toggle failed:", response.error);
         // Revert optimistic update
         setData((prev) => ({
           ...prev,
@@ -112,7 +119,7 @@ function Popup() {
         }));
       }
     } catch (error) {
-      console.error("Failed to toggle extension:", error);
+      console.error("[Popup] Failed to toggle extension:", error);
       // Force a reload to get current state
       setTimeout(loadPopupData, 100);
     }
